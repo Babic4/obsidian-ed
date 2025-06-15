@@ -15,3 +15,12 @@ export function createRectFromPoints(start: Point, end: Point): Rect {
 		height: Math.abs(start.y - end.y),
 	}
 }
+
+export function isPointInRect(point: Point, rect: Rect): boolean {
+	return (
+		point.x >= rect.x &&
+		point.x <= rect.x + rect.width &&
+		point.y >= rect.y &&
+		point.y <= rect.y + rect.height
+	)
+}

@@ -1,4 +1,8 @@
-import { selectItems, type SelectionModifier } from '../../domain/selection'
+import {
+	selectItems,
+	type Selection,
+	type SelectionModifier,
+} from '../../domain/selection'
 import type { ViewModelParams } from '../view-model-params'
 import type { ViewModel } from '../view-model-type'
 import { goToAddSticker } from './add-sticker'
@@ -51,9 +55,6 @@ export function useIdleViewModel({
 			},
 		},
 		overlay: {
-			onClick: () => {
-				select(idleState, [], 'replace')
-			},
 			onMouseDown: e => {
 				setViewState({
 					...idleState,
@@ -62,6 +63,15 @@ export function useIdleViewModel({
 						canvasRect
 					),
 				})
+			},
+			onMouseUp: () => {
+				if (idleState.mouseDown) {
+					setViewState({
+						...idleState,
+						// selectedIds: new Set(),
+						selectedIds: selectItems(idleState.selectedIds, [], 'replace'),
+					})
+				}
 			},
 		},
 		window: {
@@ -79,7 +89,15 @@ export function useIdleViewModel({
 					)
 
 					if (distanceFromPoints(idleState.mouseDown, currentPoint) > 5) {
-						setViewState(goToSelectionWindow(idleState.mouseDown, currentPoint))
+						setViewState(
+							goToSelectionWindow({
+								startPoint: idleState.mouseDown,
+								endPoint: currentPoint,
+								initialSelectedIds: e.shiftKey
+									? idleState.selectedIds
+									: undefined,
+							})
+						)
 					}
 				}
 			},
@@ -95,9 +113,13 @@ export function useIdleViewModel({
 	})
 }
 
-export function goToIdle(): IdleViewState {
+export function goToIdle({
+	selectedIds,
+}: {
+	selectedIds?: Selection
+} = {}): IdleViewState {
 	return {
 		type: 'idle',
-		selectedIds: new Set(),
+		selectedIds: selectedIds ?? new Set(),
 	}
 }

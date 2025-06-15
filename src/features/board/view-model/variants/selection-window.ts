@@ -1,19 +1,16 @@
-import { createRectFromPoints } from '../../domain/rect'
+import type { Point } from '../../domain/point'
+import { createRectFromPoints, isPointInRect } from '../../domain/rect'
 import { pointOnScreenToCanvas } from '../../domain/screen-to-canvas'
+import { selectItems } from '../../domain/selection'
 import type { ViewModelParams } from '../view-model-params'
 import type { ViewModel } from '../view-model-type'
 import { goToIdle } from './idle'
 
 export type SelectionWindowViewState = {
 	type: 'selection-window'
-	startPoint: {
-		x: number
-		y: number
-	}
-	endPoint: {
-		x: number
-		y: number
-	}
+	startPoint: Point
+	endPoint: Point
+	initialSelectedIds: Set<string>
 }
 
 export function useSelectionWindowViewModel({
@@ -25,7 +22,11 @@ export function useSelectionWindowViewModel({
 		const rect = createRectFromPoints(state.startPoint, state.endPoint)
 
 		return {
-			nodes: nodesModel.nodes,
+			nodes: nodesModel.nodes.map(node => ({
+				...node,
+				isSelected:
+					isPointInRect(node, rect) || state.initialSelectedIds.has(node.id),
+			})),
 			selectionWindow: rect,
 			window: {
 				onMouseMove: e => {
@@ -40,26 +41,43 @@ export function useSelectionWindowViewModel({
 					setViewState({ ...state, endPoint: currentPoint })
 				},
 				onMouseUp: () => {
-					setViewState(goToIdle())
+					const nodesIsdInRect = nodesModel.nodes
+						.filter(node => isPointInRect(node, rect))
+						.map(node => node.id)
+					setViewState(
+						goToIdle({
+							selectedIds: selectItems(
+								state.initialSelectedIds,
+								nodesIsdInRect,
+								'add'
+							),
+						})
+					)
 				},
 			},
 		}
 	}
 }
 
-export function goToSelectionWindow(
+export function goToSelectionWindow({
+	startPoint,
+	endPoint,
+	initialSelectedIds,
+}: {
 	startPoint: {
 		x: number
 		y: number
-	},
+	}
 	endPoint: {
 		x: number
 		y: number
 	}
-): SelectionWindowViewState {
+	initialSelectedIds?: Set<string>
+}): SelectionWindowViewState {
 	return {
 		type: 'selection-window',
 		startPoint,
 		endPoint,
+		initialSelectedIds: initialSelectedIds ?? new Set(),
 	}
 }

@@ -25,7 +25,7 @@ function BoardPage() {
 				<Overlay
 					onClick={viewModel.overlay?.onClick}
 					onMouseDown={viewModel.overlay?.onMouseDown}
-					// onMouseUp={viewModel.overlay?.onMouseUp}
+					onMouseUp={viewModel.overlay?.onMouseUp}
 				/>
 				{viewModel.nodes.map(node => (
 					<Sticker
