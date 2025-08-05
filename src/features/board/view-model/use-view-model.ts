@@ -1,26 +1,28 @@
+import { useState } from 'react'
 import {
 	useAddStickerViewModel,
 	type AddStickerViewState,
 } from './variants/add-sticker'
-import { useIdleViewModel, type IdleViewState } from './variants/idle'
+import { goToIdle, useIdleViewModel, type IdleViewState } from './variants/idle'
 import {
 	useSelectionWindowViewModel,
 	type SelectionWindowViewState,
 } from './variants/selection-window'
+import {
+	useEditStickerViewModel,
+	type EditStickerViewState,
+} from './variants/edit-sticker'
 import type { ViewModel } from './view-model-type'
 import type { ViewModelParams } from './view-model-params'
-import { useState } from 'react'
 
 export type ViewState =
 	| AddStickerViewState
+	| EditStickerViewState
 	| IdleViewState
 	| SelectionWindowViewState
 
 export function useViewModel(params: Omit<ViewModelParams, 'setViewState'>) {
-	const [viewState, setViewState] = useState<ViewState>({
-		type: 'idle',
-		selectedIds: new Set(),
-	})
+	const [viewState, setViewState] = useState<ViewState>(() => goToIdle())
 
 	const newParams = {
 		...params,
@@ -28,6 +30,7 @@ export function useViewModel(params: Omit<ViewModelParams, 'setViewState'>) {
 	}
 
 	const addStickerViewModel = useAddStickerViewModel(newParams)
+	const editStickerViewModel = useEditStickerViewModel(newParams)
 	const idleViewModel = useIdleViewModel(newParams)
 	const selectionWindowViewModel = useSelectionWindowViewModel(newParams)
 
@@ -35,6 +38,9 @@ export function useViewModel(params: Omit<ViewModelParams, 'setViewState'>) {
 	switch (viewState.type) {
 		case 'add-sticker':
 			viewModel = addStickerViewModel()
+			break
+		case 'edit-sticker':
+			viewModel = editStickerViewModel(viewState)
 			break
 		case 'idle':
 			viewModel = idleViewModel(viewState)

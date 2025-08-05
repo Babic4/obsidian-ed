@@ -9,6 +9,7 @@ import { goToAddSticker } from './add-sticker'
 import { distanceFromPoints } from '../../domain/point'
 import { goToSelectionWindow } from './selection-window'
 import { pointOnScreenToCanvas } from '../../domain/screen-to-canvas'
+import { goToEditSticker } from './edit-sticker'
 
 export type IdleViewState = {
 	type: 'idle'
@@ -35,11 +36,31 @@ export function useIdleViewModel({
 		})
 	}
 
+	const deleteSelected = (viewState: IdleViewState) => {
+		if (viewState.selectedIds.size > 0) {
+			const ids = Array.from(viewState.selectedIds)
+			nodesModel.deleteNodes(ids)
+			setViewState({
+				...viewState,
+				selectedIds: new Set(),
+			})
+		}
+	}
+
 	return (idleState: IdleViewState): ViewModel => ({
 		nodes: nodesModel.nodes.map(node => ({
 			...node,
 			isSelected: idleState.selectedIds.has(node.id),
 			onClick: e => {
+				if (
+					idleState.selectedIds.size === 1 &&
+					idleState.selectedIds.has(node.id) &&
+					!e.ctrlKey &&
+					!e.shiftKey
+				) {
+					setViewState(goToEditSticker(node.id))
+					return
+				}
 				if (e.ctrlKey || e.shiftKey) {
 					select(idleState, [node.id], 'toggle')
 				} else {
@@ -49,8 +70,24 @@ export function useIdleViewModel({
 		})),
 		layout: {
 			onKeyDown: e => {
+				if (
+					!e.shiftKey &&
+					!e.altKey &&
+					!e.metaKey &&
+					!e.ctrlKey &&
+					idleState.selectedIds.size === 1
+				) {
+					const [id] = idleState.selectedIds.values()
+					setViewState(goToEditSticker(id))
+					return
+				}
+
 				if (e.key === 's') {
 					setViewState(goToAddSticker())
+				}
+
+				if (e.key === 'Delete' || e.key === 'Backspace') {
+					deleteSelected(idleState)
 				}
 			},
 		},
