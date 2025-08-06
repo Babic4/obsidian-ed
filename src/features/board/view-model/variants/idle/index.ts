@@ -1,7 +1,6 @@
 import { type Selection } from '../../../domain/selection'
 import type { ViewModelParams } from '../../view-model-params'
 import type { ViewModel } from '../../view-model-type'
-import { goToAddSticker } from '../add-sticker'
 import { distanceFromPoints } from '../../../domain/point'
 import { goToSelectionWindow } from '../selection-window'
 import { pointOnScreenToCanvas } from '../../../domain/screen-to-canvas'
@@ -19,6 +18,30 @@ export type IdleViewState = {
 	}
 }
 
+function useMouseDown({ setViewState, canvasRect }: ViewModelParams) {
+	const handelOverlayMouseDown = (
+		idleState: IdleViewState,
+		e: React.MouseEvent<HTMLDivElement>
+	) => {
+		setViewState({
+			...idleState,
+			mouseDown: pointOnScreenToCanvas(
+				{ x: e.clientX, y: e.clientY },
+				canvasRect
+			),
+		})
+	}
+
+	const handelWindowMouseUp = (idleState: IdleViewState) => {
+		setViewState({
+			...idleState,
+			mouseDown: undefined,
+		})
+	}
+
+	return { handelOverlayMouseDown, handelWindowMouseUp }
+}
+
 export function useIdleViewModel(params: ViewModelParams) {
 	const { nodesModel, setViewState, canvasRect } = params
 
@@ -26,6 +49,7 @@ export function useIdleViewModel(params: ViewModelParams) {
 	const deleteSelected = useDeleteSelected(params)
 	const goToAddSticker = useGoToAddSticker(params)
 	const goToEditSticker = useGoToEditSticker(params)
+	const mouseDown = useMouseDown(params)
 
 	return (idleState: IdleViewState): ViewModel => ({
 		nodes: nodesModel.nodes.map(node => ({
@@ -51,24 +75,11 @@ export function useIdleViewModel(params: ViewModelParams) {
 			},
 		},
 		overlay: {
-			onMouseDown: e => {
-				setViewState({
-					...idleState,
-					mouseDown: pointOnScreenToCanvas(
-						{ x: e.clientX, y: e.clientY },
-						canvasRect
-					),
-				})
-			},
+			onMouseDown: e => mouseDown.handelOverlayMouseDown(idleState, e),
 			onMouseUp: () => selection.handelOverlayMouseUp(idleState),
 		},
 		window: {
-			onMouseUp: () => {
-				setViewState({
-					...idleState,
-					mouseDown: undefined,
-				})
-			},
+			onMouseUp: () => mouseDown.handelWindowMouseUp(idleState),
 			onMouseMove: e => {
 				if (idleState.mouseDown) {
 					const currentPoint = pointOnScreenToCanvas(
