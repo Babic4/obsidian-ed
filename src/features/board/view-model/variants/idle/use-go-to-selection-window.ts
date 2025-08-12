@@ -5,12 +5,17 @@ import type { ViewModelParams } from '../../view-model-params'
 import { goToSelectionWindow } from '../selection-window'
 
 export function useGoToSelectionWindow(params: ViewModelParams) {
-	const { setViewState, canvasRect } = params
+	const { setViewState, canvasRect, windowPositionModel } = params
 
 	const handleWindowMouseMove = (idleState: IdleViewState, e: MouseEvent) => {
-		if (idleState.mouseDown && idleState.mouseDown.type === 'overlay') {
+		if (
+			idleState.mouseDown &&
+			idleState.mouseDown.type === 'overlay' &&
+			!idleState.mouseDown.isRightClick
+		) {
 			const currentPoint = pointOnScreenToCanvas(
 				{ x: e.clientX, y: e.clientY },
+				windowPositionModel.position,
 				canvasRect
 			)
 
