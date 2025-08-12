@@ -25,7 +25,7 @@ export function Canvas({
 			<div
 				style={{
 					transformOrigin: 'left top',
-					transform: `scale(${windowPosition.zoom}) translate(${-windowPosition.x}px, ${windowPosition.y}px)`,
+					transform: `scale(${windowPosition.zoom}) translate(${-windowPosition.x}px, ${-windowPosition.y}px)`,
 				}}
 			>
 				{children}
