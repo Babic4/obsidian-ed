@@ -7,14 +7,23 @@ import { useGoToEditSticker } from './use-go-to-edit-sticker'
 import { useGoToAddSticker } from './use-go-to-add-sticker'
 import { useMouseDown } from './use-mouse-down'
 import { useGoToSelectionWindow } from './use-go-to-selection-window'
+import { useGoToNodesDragging } from './use-go-to-nodes-dragging'
 
 export type IdleViewState = {
 	type: 'idle'
 	selectedIds: Set<string>
-	mouseDown?: {
-		x: number
-		y: number
-	}
+	mouseDown?:
+		| {
+				type: 'overlay'
+				x: number
+				y: number
+		  }
+		| {
+				type: 'node'
+				x: number
+				y: number
+				nodeId: string
+		  }
 }
 
 export function useIdleViewModel(params: ViewModelParams) {
@@ -24,6 +33,7 @@ export function useIdleViewModel(params: ViewModelParams) {
 	const goToAddSticker = useGoToAddSticker(params)
 	const goToEditSticker = useGoToEditSticker(params)
 	const goToSelectionWindow = useGoToSelectionWindow(params)
+	const goToNodesDragging = useGoToNodesDragging(params)
 	const mouseDown = useMouseDown(params)
 	const selection = useSelection(params)
 
@@ -31,7 +41,9 @@ export function useIdleViewModel(params: ViewModelParams) {
 		nodes: nodesModel.nodes.map(node => ({
 			...node,
 			isSelected: selection.isSelected(idleState, node.id),
-			onClick: e => {
+			onMouseDown: e => mouseDown.handleNodeMouseDown(idleState, node.id, e),
+			onMouseUp: e => {
+				if (!mouseDown.getIsStickerMouseDown(idleState, node.id)) return
 				const clickResult = goToEditSticker.handleNodeClick(
 					idleState,
 					node.id,
@@ -43,9 +55,6 @@ export function useIdleViewModel(params: ViewModelParams) {
 		})),
 		layout: {
 			onKeyDown: e => {
-				const keyDownResult = goToEditSticker.handleKeyDown(idleState, e)
-				if (keyDownResult.preventNext) return
-
 				goToAddSticker.handleKeyDown(e)
 				deleteSelected.handleKeyDown(idleState, e)
 			},
@@ -56,7 +65,10 @@ export function useIdleViewModel(params: ViewModelParams) {
 		},
 		window: {
 			onMouseUp: () => mouseDown.handelWindowMouseUp(idleState),
-			onMouseMove: e => goToSelectionWindow.handleWindowMouseMove(idleState, e),
+			onMouseMove: e => {
+				goToNodesDragging.handleWindowMouseMove(idleState, e)
+				goToSelectionWindow.handleWindowMouseMove(idleState, e)
+			},
 		},
 		actions: {
 			addSticker: {

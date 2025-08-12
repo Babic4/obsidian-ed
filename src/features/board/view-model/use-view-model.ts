@@ -12,6 +12,10 @@ import {
 	useEditStickerViewModel,
 	type EditStickerViewState,
 } from './variants/edit-sticker'
+import {
+	useNodesDraggingViewModel,
+	type NodesDraggingViewState,
+} from './variants/nodes-dragging'
 import type { ViewModel } from './view-model-type'
 import type { ViewModelParams } from './view-model-params'
 
@@ -20,6 +24,7 @@ export type ViewState =
 	| EditStickerViewState
 	| IdleViewState
 	| SelectionWindowViewState
+	| NodesDraggingViewState
 
 export function useViewModel(params: Omit<ViewModelParams, 'setViewState'>) {
 	const [viewState, setViewState] = useState<ViewState>(() => goToIdle())
@@ -33,6 +38,7 @@ export function useViewModel(params: Omit<ViewModelParams, 'setViewState'>) {
 	const editStickerViewModel = useEditStickerViewModel(newParams)
 	const idleViewModel = useIdleViewModel(newParams)
 	const selectionWindowViewModel = useSelectionWindowViewModel(newParams)
+	const nodesDraggingViewModel = useNodesDraggingViewModel(newParams)
 
 	let viewModel: ViewModel
 	switch (viewState.type) {
@@ -47,6 +53,9 @@ export function useViewModel(params: Omit<ViewModelParams, 'setViewState'>) {
 			break
 		case 'selection-window':
 			viewModel = selectionWindowViewModel(viewState)
+			break
+		case 'nodes-dragging':
+			viewModel = nodesDraggingViewModel(viewState)
 			break
 		default:
 			throw new Error('Invalid view state')
