@@ -1,13 +1,12 @@
 import { type Selection } from '../../../domain/selection'
 import type { ViewModelParams } from '../../view-model-params'
 import type { ViewModel } from '../../view-model-type'
-import { distanceFromPoints } from '../../../domain/point'
-import { goToSelectionWindow } from '../selection-window'
-import { pointOnScreenToCanvas } from '../../../domain/screen-to-canvas'
 import { useSelection } from './use-selection'
-import { useDeleteSelected } from './useDeleteSelected'
-import { useGoToEditSticker } from './useGoToEditSticker'
-import { useGoToAddSticker } from './useGoToAddSticker'
+import { useDeleteSelected } from './use-delete-selected'
+import { useGoToEditSticker } from './use-go-to-edit-sticker'
+import { useGoToAddSticker } from './use-go-to-add-sticker'
+import { useMouseDown } from './use-mouse-down'
+import { useGoToSelectionWindow } from './use-go-to-selection-window'
 
 export type IdleViewState = {
 	type: 'idle'
@@ -18,38 +17,15 @@ export type IdleViewState = {
 	}
 }
 
-function useMouseDown({ setViewState, canvasRect }: ViewModelParams) {
-	const handelOverlayMouseDown = (
-		idleState: IdleViewState,
-		e: React.MouseEvent<HTMLDivElement>
-	) => {
-		setViewState({
-			...idleState,
-			mouseDown: pointOnScreenToCanvas(
-				{ x: e.clientX, y: e.clientY },
-				canvasRect
-			),
-		})
-	}
-
-	const handelWindowMouseUp = (idleState: IdleViewState) => {
-		setViewState({
-			...idleState,
-			mouseDown: undefined,
-		})
-	}
-
-	return { handelOverlayMouseDown, handelWindowMouseUp }
-}
-
 export function useIdleViewModel(params: ViewModelParams) {
-	const { nodesModel, setViewState, canvasRect } = params
+	const { nodesModel } = params
 
-	const selection = useSelection(params)
 	const deleteSelected = useDeleteSelected(params)
 	const goToAddSticker = useGoToAddSticker(params)
 	const goToEditSticker = useGoToEditSticker(params)
+	const goToSelectionWindow = useGoToSelectionWindow(params)
 	const mouseDown = useMouseDown(params)
+	const selection = useSelection(params)
 
 	return (idleState: IdleViewState): ViewModel => ({
 		nodes: nodesModel.nodes.map(node => ({
@@ -80,26 +56,7 @@ export function useIdleViewModel(params: ViewModelParams) {
 		},
 		window: {
 			onMouseUp: () => mouseDown.handelWindowMouseUp(idleState),
-			onMouseMove: e => {
-				if (idleState.mouseDown) {
-					const currentPoint = pointOnScreenToCanvas(
-						{ x: e.clientX, y: e.clientY },
-						canvasRect
-					)
-
-					if (distanceFromPoints(idleState.mouseDown, currentPoint) > 5) {
-						setViewState(
-							goToSelectionWindow({
-								startPoint: idleState.mouseDown,
-								endPoint: currentPoint,
-								initialSelectedIds: e.shiftKey
-									? idleState.selectedIds
-									: undefined,
-							})
-						)
-					}
-				}
-			},
+			onMouseMove: e => goToSelectionWindow.handleWindowMouseMove(idleState, e),
 		},
 		actions: {
 			addSticker: {
