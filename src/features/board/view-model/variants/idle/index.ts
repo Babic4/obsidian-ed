@@ -1,15 +1,14 @@
+import React from 'react'
 import { type Selection } from '../../../domain/selection'
 import type { ViewModelParams } from '../../view-model-params'
 import type { ViewModel } from '../../view-model-type'
 import { useSelection } from './use-selection'
 import { useDeleteSelected } from './use-delete-selected'
 import { useGoToEditSticker } from './use-go-to-edit-sticker'
-import { useGoToAddSticker } from './use-go-to-add-sticker'
 import { useMouseDown } from './use-mouse-down'
 import { useGoToSelectionWindow } from './use-go-to-selection-window'
 import { useGoToNodesDragging } from './use-go-to-nodes-dragging'
 import { useGoToWindowDragging } from './use-go-to-window-dragging'
-import React from 'react'
 
 export type IdleViewState = {
 	type: 'idle'
@@ -34,7 +33,6 @@ export function useIdleViewModel(params: ViewModelParams) {
 	const { nodesModel } = params
 
 	const deleteSelected = useDeleteSelected(params)
-	const goToAddSticker = useGoToAddSticker(params)
 	const goToEditSticker = useGoToEditSticker(params)
 	const goToSelectionWindow = useGoToSelectionWindow(params)
 	const goToNodesDragging = useGoToNodesDragging(params)
@@ -61,7 +59,6 @@ export function useIdleViewModel(params: ViewModelParams) {
 		})),
 		layout: {
 			onKeyDown: e => {
-				goToAddSticker.handleKeyDown(e)
 				deleteSelected.handleKeyDown(idleState, e)
 			},
 		},
@@ -75,12 +72,6 @@ export function useIdleViewModel(params: ViewModelParams) {
 				goToSelectionWindow.handleWindowMouseMove(idleState, e)
 				goToNodesDragging.handleWindowMouseMove(idleState, e)
 				goToWindowDragging.handleWindowMouseMove(idleState, e)
-			},
-		},
-		actions: {
-			addSticker: {
-				isActive: false,
-				onClick: goToAddSticker.handleActionClick,
 			},
 		},
 	})
