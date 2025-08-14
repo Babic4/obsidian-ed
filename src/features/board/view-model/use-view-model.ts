@@ -4,6 +4,10 @@ import {
 	type AddArrowViewState,
 } from './variants/add-arrow'
 import {
+	useDrawArrowViewModel,
+	type DrawArrowViewState,
+} from './variants/draw-arrow'
+import {
 	useAddStickerViewModel,
 	type AddStickerViewState,
 } from './variants/add-sticker'
@@ -37,6 +41,7 @@ export type ViewState =
 	| SelectionWindowViewState
 	| NodesDraggingViewState
 	| WindowDraggingViewState
+	| DrawArrowViewState
 
 export function useViewModel(params: Omit<ViewModelParams, 'setViewState'>) {
 	const [viewState, setViewState] = useState<ViewState>(() => goToIdle())
@@ -47,6 +52,7 @@ export function useViewModel(params: Omit<ViewModelParams, 'setViewState'>) {
 	}
 
 	const addArrowViewModel = useAddArrowViewModel(newParams)
+	const drawArrowViewModel = useDrawArrowViewModel(newParams)
 	const addStickerViewModel = useAddStickerViewModel(newParams)
 	const editStickerViewModel = useEditStickerViewModel(newParams)
 	const idleViewModel = useIdleViewModel(newParams)
@@ -61,6 +67,9 @@ export function useViewModel(params: Omit<ViewModelParams, 'setViewState'>) {
 	switch (viewState.type) {
 		case 'add-arrow':
 			viewModel = commonActionsDecorator(addArrowViewModel())
+			break
+		case 'draw-arrow':
+			viewModel = drawArrowViewModel(viewState)
 			break
 		case 'add-sticker':
 			viewModel = commonActionsDecorator(addStickerViewModel())
