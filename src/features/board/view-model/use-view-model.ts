@@ -32,6 +32,7 @@ import type { ViewModel } from './view-model-type'
 import type { ViewModelParams } from './view-model-params'
 import { useZoomDecorator } from './decorator/zoom'
 import { useCommonActionsDecorator } from './decorator/common-actions'
+import { useResolveRelativeStaticDecorator } from './decorator/resolve-relative'
 
 export type ViewState =
 	| AddArrowViewState
@@ -65,20 +66,23 @@ export function useViewModel(params: Omit<ViewModelParams, 'setViewState'>) {
 
 	let viewModel: ViewModel
 	switch (viewState.type) {
+		case 'idle':
+			viewModel = idleViewModel(viewState)
+			viewModel = commonActionsDecorator(viewModel)
+			break
 		case 'add-arrow':
-			viewModel = commonActionsDecorator(addArrowViewModel())
+			viewModel = addArrowViewModel()
+			viewModel = commonActionsDecorator(viewModel)
+			break
+		case 'add-sticker':
+			viewModel = addStickerViewModel()
+			viewModel = commonActionsDecorator(viewModel)
 			break
 		case 'draw-arrow':
 			viewModel = drawArrowViewModel(viewState)
 			break
-		case 'add-sticker':
-			viewModel = commonActionsDecorator(addStickerViewModel())
-			break
 		case 'edit-sticker':
 			viewModel = editStickerViewModel(viewState)
-			break
-		case 'idle':
-			viewModel = commonActionsDecorator(idleViewModel(viewState))
 			break
 		case 'selection-window':
 			viewModel = selectionWindowViewModel(viewState)
@@ -93,5 +97,8 @@ export function useViewModel(params: Omit<ViewModelParams, 'setViewState'>) {
 			throw new Error('Invalid view state')
 	}
 
-	return zoomDecorator(viewModel)
+	viewModel = zoomDecorator(viewModel)
+	viewModel = useResolveRelativeStaticDecorator(viewModel)
+
+	return viewModel
 }

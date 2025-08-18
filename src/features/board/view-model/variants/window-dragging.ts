@@ -1,4 +1,4 @@
-import { vectorFromPoints, type Point } from '../../domain/point'
+import { diffPoints, type Point } from '../../domain/point'
 import { pointOnScreenToCanvas } from '../../domain/screen-to-canvas'
 import type { ViewModelParams } from '../view-model-params'
 import type { ViewModel } from '../view-model-type'
@@ -17,7 +17,7 @@ export function useWindowDraggingViewModel({
 	windowPositionModel,
 }: ViewModelParams) {
 	return (state: WindowDraggingViewState): ViewModel => {
-		const diff = vectorFromPoints(state.startPoint, state.endPoint)
+		const diff = diffPoints(state.startPoint, state.endPoint)
 		return {
 			nodes: nodesModel.nodes,
 			windowPosition: {
